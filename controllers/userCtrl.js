@@ -1,5 +1,7 @@
 const Users = require('../models/userModel')
-
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+//32:11
 
 const userCtrl = {
     register: async (req, res) => {
@@ -17,6 +19,14 @@ const userCtrl = {
 
             if(password.length < 6)
                 return res.status(400).json({msg: "Password must be at least 6 characters."})
+
+            const passwordHash = await bcrypt.hash(password, 12)
+
+            const newUser = {
+                name, email, password: passwordHash
+            }
+
+            console.log(newUser)
 
             res.json({msg: "Register Test"})
         } catch (err) {
