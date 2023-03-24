@@ -1,7 +1,8 @@
 const Users = require('../models/userModel')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-//32:11
+
+const {CLIENT_URL} = process.env
 
 const userCtrl = {
     register: async (req, res) => {
@@ -26,9 +27,13 @@ const userCtrl = {
                 name, email, password: passwordHash
             }
 
-            console.log(newUser)
+            const activation_token = createActivationToken(newUser)
 
-            res.json({msg: "Register Test"})
+            const url = `${CLIENT_URL}/user/activate/${activation_token}`
+            SendmailTransport(email, url)
+
+            
+            res.json({msg: "Register Success! Please activate your email to start."})
         } catch (err) {
             return res.status(500).json({msg: err.message})
         }
@@ -39,6 +44,18 @@ const userCtrl = {
 function validateEmail(email) {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
+}
+
+const createActivationToken = (payload) => {
+    return jwt.sign(payload, process.env.ACTIVATION_TOKEN_SECRET, {expiresIn: '5m'})
+}
+
+const createAccessToken = (payload) => {
+    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'})
+}
+
+const createRefreshToken = (payload) => {
+    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {expiresIn: '7d'})
 }
 
 module.exports = userCtrl
